@@ -1,7 +1,9 @@
+/*
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <dht11.h>
 #include <IRremote.h>
+*/
 #include "Lib_CNG.h"
 
 CNG_Class::CNG_Class () {
@@ -23,9 +25,10 @@ void CNG_Class::init () {
 
     digitalWrite (ERROR_BUS, HIGH);
     digitalWrite (OK_BUS, LOW);
+    
 	touch = hello_touch = millis ();
 	door_value = digitalRead (DOOR_SENSOR_BUS);
-
+    receiver -> enableIRIn ();
 	sensor -> begin ();
 }
 
@@ -58,27 +61,21 @@ void CNG_Class::sendSensorData (long now) {
     if (now - touch > data_timeout) {
         sensor->requestTemperatures ();
         float humidity = readHumidity ();
+//        float hum, temp;
+//        read (&temp, &hum);
         int smoke = analogRead (MQ_BUS);
         Serial.print ("{\"D\":");
         Serial.print ("{\"T\":");
         Serial.print (sensor->getTempCByIndex (0));
+//        Serial.print (temp);
         Serial.print (",\"H\":");
+//        Serial.print (hum);
         Serial.print (humidity);
         Serial.print (",\"S\":");
         Serial.print (smoke);
         Serial.println ("}}");
         touch = millis ();
     }
-}
-
-/**
- * Convert 4 bytes to an integer
- */
-int CNG_Class::byteToInt (const char *bytes, int start) {
-    return (bytes [start    ] & 0xff) << 24 |
-           (bytes [start + 1] & 0xff) << 16 |
-           (bytes [start + 2] & 0xff) << 8  |
-           (bytes [start + 3] & 0xff);
 }
 
 float CNG_Class::readHumidity () {
@@ -117,12 +114,11 @@ void CNG_Class::process (const char cmd, const char type, const char *buff) {
             ;
             break;
         case CMD_SET : {
-            int n = byteToInt (buff, 0) * 1000;
-            set (type, n);
+            set (type, buff);
             break;
         }
         case CMD_SEND_DATA : {
-            int data = byteToInt (buff, 0) * 1000;
+            uint32_t data = B2L (buff);
             sendData (type, data);
             break;
         }
@@ -131,16 +127,20 @@ void CNG_Class::process (const char cmd, const char type, const char *buff) {
     }
 }
 
-void CNG_Class::set (char target, int value) {
+void CNG_Class::set (char target, const char *buff) {
     switch (target) {
-        case TYPE_DATA_TIMEOUT :
-            data_timeout = value;
+        case TYPE_DATA_TIMEOUT : {
+            uint32_t n = B2L (buff);
+            data_timeout = n * 1000;
             break;
-        case TYPE_HELLO_TIMEOUT :
-            hello_timeout = value;
+        }
+        case TYPE_HELLO_TIMEOUT : {
+            uint32_t n = B2L (buff);
+            hello_timeout = n * 1000;
             break;
+        }
         case TYPE_MODE :
-            mode = value;
+            mode = buff[0];
             break;
         default :
             break;
@@ -176,9 +176,14 @@ void CNG_Class::doWork () {
 void CNG_Class::learn () {
     if (mode == MODE_LEARN) {
         if (receiver->decode (&results)) {
-            Serial.print ("{\"C\":{\"C\":");
-            Serial.print (results.value);
-            Serial.println ("}}");
+            if (results.value != -1) {
+                Serial.print ("{\"C\":{\"C\":");
+                Serial.print (results.value);
+                Serial.print (", \"T\":");
+                Serial.print (results.decode_type);
+                Serial.println ("}}");
+            }
+            receiver->resume ();
         }
     }
 }
@@ -187,15 +192,10 @@ void CNG_Class::checkEvent () {
     int value = digitalRead (DOOR_SENSOR_BUS);
     if (value != door_value) {
         if (mismatch_count >= 5) {
-            if (value == HIGH) {
-                door_value = 1;
-                Serial.println ("{\"E\":{\"D\":\"C\"}}");
-                // door is closed.
-            } else {
-                door_value = 0;
-                Serial.println ("{\"E\":{\"D\":\"O\"}}");
-                // door is opened.
-            }
+            Serial.print ("{\"E\":{\"D\":\"");
+            Serial.print (value == HIGH ? "C" : "O");
+            Serial.println ("\"}}");
+            door_value = value;
             v1 = door_value;
             mismatch_count = 0;
         } else {

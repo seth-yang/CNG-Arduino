@@ -59,12 +59,17 @@
 #define TARGET_LOCK        'L'
 #define TARGET_LIGHT       'T'
 
+#define B2L(buff)          ((uint32_t)((buff)[0] & 0xff) << 24 | \
+                                      ((buff)[1] & 0xff) << 16 | \
+                                      ((buff)[2] & 0xff) << 8  | \
+                                      ((buff)[3] & 0xff))
+
 class CNG_Class {
 private:
 	long    touch,                              // sensor data touch timestamp
 			hello_touch,                        // hello touch timestamp
-			data_timeout = 1000,                // sensor data timeout
-			hello_timeout = 1000;               // hello timeout
+			data_timeout = 5000,                // sensor data timeout
+			hello_timeout = 5000;               // hello timeout
 	int pos = 0,                                // command read position
 		fail_count = 3,                         // bluetooth connect fail count
 		mode = MODE_SILENT,                     // IR Control mode
@@ -73,17 +78,18 @@ private:
 
 	OneWire *oneWire;
 	DallasTemperature *sensor;
-	dht11 DHT11;
+    dht11 DHT11;
 	IRrecv *receiver;
 	IRsend sender;
 	decode_results results;
 
 	void sendSensorData (long now);
-	int byteToInt (const char *bytes, int start);
+//	int byteToInt (const char *bytes, int start);
 	float readHumidity ();
+//    void read (float *temperature, float *humidity);
 	void checkStatus (long now);
 	void process (const char cmd, const char type, const char *buff);
-	void set (char target, int value);
+	void set (char target, const char *buff);
 	void sendData (char target, int value);
 	void learn ();
 	void checkEvent ();
