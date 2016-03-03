@@ -5,6 +5,7 @@
 #include <DallasTemperature.h>
 #include <dht11.h>
 #include <IRremote.h>
+#include <SoftwareSerial.h>
 
 #define ONE_WIRE_BUS       2
 #define IR_LED             3             // REQUIRED.
@@ -82,7 +83,7 @@ private:
 	IRrecv *receiver;
 	IRsend sender;
 	decode_results results;
-
+    
 	void sendSensorData (long now);
 //	int byteToInt (const char *bytes, int start);
 	float readHumidity ();

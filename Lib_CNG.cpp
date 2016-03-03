@@ -1,21 +1,15 @@
-/*
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <dht11.h>
-#include <IRremote.h>
-*/
 #include "Lib_CNG.h"
 
 CNG_Class::CNG_Class () {
-	oneWire  = new OneWire (ONE_WIRE_BUS);
-	sensor   = new DallasTemperature (oneWire);
-	receiver = new IRrecv (RECEIVER_BUS);
+    oneWire  = new OneWire (ONE_WIRE_BUS);
+    sensor   = new DallasTemperature (oneWire);
+    receiver = new IRrecv (RECEIVER_BUS);
 }
 
 CNG_Class::~CNG_Class () {
-	delete sensor;
-	delete oneWire;
-	delete receiver;
+    delete sensor;
+    delete oneWire;
+    delete receiver;
 }
 
 void CNG_Class::init () {
@@ -27,14 +21,14 @@ void CNG_Class::init () {
     digitalWrite (ERROR_BUS, HIGH);
     digitalWrite (OK_BUS, LOW);
     
-	touch = hello_touch = millis ();
-	door_value = digitalRead (DOOR_SENSOR_BUS);
+    touch = hello_touch = millis ();
+    door_value = digitalRead (DOOR_SENSOR_BUS);
     receiver -> enableIRIn ();
-	sensor -> begin ();
+    sensor -> begin ();
 }
 
 /**
- * Read commands from Serial Port
+ * Read commands from BT Port
  */
 void CNG_Class::readCommand () {
     while (Serial.available ()) {
@@ -48,7 +42,19 @@ void CNG_Class::readCommand () {
         char  cmd  = command [0];
         char  type = command [1];
         char *buff = command + 2;
-
+//#ifdef DEBUG
+        Serial.print ("cmd     = ");
+        Serial.println (cmd);
+        Serial.print ("type    = ");
+        Serial.println (type);
+        for (int i = 0; i < 4; i ++) {
+            Serial.print ("buff[");
+            Serial.print (i);
+            Serial.print ("] = ");
+            Serial.println (buff[i], HEX);
+        }
+        Serial.println ();
+//#endif
         process (cmd, type, buff);
         memset (command, 0, MAX_LENGTH);
         pos = 0;
