@@ -19,4 +19,3 @@ void loop () {
     CNG.readCommand ();
     CNG.doWork ();
 }
-

@@ -21,6 +21,7 @@ CNG_Class::~CNG_Class () {
 void CNG_Class::init () {
     pinMode (ERROR_BUS, OUTPUT);
     pinMode (OK_BUS, OUTPUT);
+    pinMode (FAN_BUS, OUTPUT);
     pinMode (DOOR_SENSOR_BUS, INPUT_PULLUP);
 
     digitalWrite (ERROR_BUS, HIGH);
@@ -64,14 +65,14 @@ void CNG_Class::sendSensorData (long now) {
 //        float hum, temp;
 //        read (&temp, &hum);
         int smoke = analogRead (MQ_BUS);
-        Serial.print ("{\"D\":");
-        Serial.print ("{\"T\":");
+        Serial.print ("{D:");
+        Serial.print ("{T:");
         Serial.print (sensor->getTempCByIndex (0));
 //        Serial.print (temp);
-        Serial.print (",\"H\":");
+        Serial.print (",H:");
 //        Serial.print (hum);
         Serial.print (humidity);
-        Serial.print (",\"S\":");
+        Serial.print (",S:");
         Serial.print (smoke);
         Serial.println ("}}");
         touch = millis ();
@@ -177,9 +178,9 @@ void CNG_Class::learn () {
     if (mode == MODE_LEARN) {
         if (receiver->decode (&results)) {
             if (results.value != -1) {
-                Serial.print ("{\"C\":{\"C\":");
+                Serial.print ("{C:{C:");
                 Serial.print (results.value);
-                Serial.print (", \"T\":");
+                Serial.print (", T:");
                 Serial.print (results.decode_type);
                 Serial.println ("}}");
             }
@@ -192,7 +193,7 @@ void CNG_Class::checkEvent () {
     int value = digitalRead (DOOR_SENSOR_BUS);
     if (value != door_value) {
         if (mismatch_count >= 5) {
-            Serial.print ("{\"E\":{\"D\":\"");
+            Serial.print ("{E:{T:\"D\",D:\"");
             Serial.print (value == HIGH ? "C" : "O");
             Serial.println ("\"}}");
             door_value = value;
