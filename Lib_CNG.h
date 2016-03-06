@@ -47,6 +47,7 @@
 /* Reset the SOC */
 #define CMD_RESET          'R'
 #define CMD_SEND_DATA      'D'
+#define CMD_READ_STATE     'V'
 
 #define TYPE_DATA_TIMEOUT  'D'
 #define TYPE_HELLO_TIMEOUT 'H'
@@ -101,4 +102,6 @@ public :
 	void readCommand ();
 	void doWork ();
 };
+
+void readAndSendState ();
 #endif

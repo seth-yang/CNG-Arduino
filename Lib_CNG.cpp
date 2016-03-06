@@ -129,6 +129,9 @@ void CNG_Class::process (const char cmd, const char type, const char *buff) {
             sendData (type, data);
             break;
         }
+        case CMD_READ_STATE :
+            readAndSendState ();
+            break;
         default :
             break;
     }
@@ -210,3 +213,8 @@ void CNG_Class::checkEvent () {
         }
     }
 }
+
+void readAndSendState () {
+    
+}
+
