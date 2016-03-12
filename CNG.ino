@@ -1,21 +1,22 @@
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <dht11.h>
-#include <IRremote.h>
+#include <Arduino.h>
 #include "Lib_CNG.h"
-
-#define FLAG_LED  13
+#include "card.h"
 
 CNG_Class CNG;
+
 void setup () {
     Serial.begin (9600);
     CNG.init ();
 
-    pinMode (FLAG_LED, OUTPUT);
-    digitalWrite (FLAG_LED, LOW);
+    init_card ();
+
+    pinMode (BEEPER, OUTPUT);
+    digitalWrite (BEEPER, LOW);
 }
 
 void loop () {
     CNG.readCommand ();
     CNG.doWork ();
+
+    read_sector ();
 }
