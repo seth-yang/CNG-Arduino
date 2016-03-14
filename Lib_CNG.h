@@ -249,6 +249,7 @@ void CNG_Class::set (char target, const char *buff) {
         }
         case TYPE_MODE :
             mode = buff[0];
+            raise_event (target, (char) mode);
             break;
         default :
             break;
